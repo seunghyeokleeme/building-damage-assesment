@@ -20,7 +20,6 @@ log_dir = './log'
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # 데이터셋 구축
-
 class xBD(torch.utils.data.Dataset):
     def __init__(self, data_dir, transform=None):
         self.data_dir = data_dir
@@ -44,6 +43,9 @@ class xBD(torch.utils.data.Dataset):
         label = np.load(os.path.join(self.data_dir, self.lst_label[index]))
         input = np.load(os.path.join(self.data_dir, self.lst_input[index]))
 
+        label = label / 255.0
+        input = input / 255.0
+
         if label.ndim == 2:
             label = label[:, :, np.newaxis]
         if input.ndim == 2:
@@ -57,7 +59,6 @@ class xBD(torch.utils.data.Dataset):
         return data
 
 # 트랜스폼 구현
-
 class Resize(object):
     def __init__(self, shape):
         self.shape = shape
@@ -118,7 +119,7 @@ class RandomHorizontalFlip(object):
         return data
 
 transform = v2.Compose([
-    Resize((512, 512)),
+    # Resize((512, 512)),
     RandomHorizontalFlip(),
     ToTensor(),
 ])
@@ -127,25 +128,14 @@ dataset_train = xBD(data_dir=os.path.join(data_dir, 'train'), transform=transfor
 # dataset_train = xBD(data_dir=os.path.join(data_dir, 'train'), transform=None)
 
 first_item = dataset_train.__getitem__(0)
-second_item = dataset_train.__getitem__(1)
 
-f_label = first_item['label']
-f_input = first_item['input']
+f_label, f_input = first_item['label'], first_item['input']
 
-print(type(f_label), type(f_input))
-print(f_label.shape, f_input.shape)
-print(f_label.dtype, f_input.dtype)
-
-f_label = f_label.numpy()
-f_input = f_input.numpy()
-
+f_label = f_label.numpy() * 255.0
+f_input = f_input.numpy() * 255.0
 
 f_label = f_label.transpose((1, 2, 0)).astype(np.uint8)
 f_input = f_input.transpose((1, 2, 0)).astype(np.uint8)
-
-print(type(f_label), type(f_input))
-print(f_label.shape, f_input.shape)
-print(f_label.dtype, f_input.dtype)
 
 plt.subplot(121)
 plt.imshow(f_label, cmap='gray')
