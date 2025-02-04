@@ -126,7 +126,7 @@ print(n_test * 2, len(os.listdir(dir_save_test)))
 
 print("Data are successfully saved.")
 print("Data preprocessing is done.")
-
+"""
 print(input_.shape, label_.shape)
 
 plt.subplot(121)
@@ -138,3 +138,4 @@ plt.imshow(label_, cmap='gray')
 plt.title('Label Image')
 
 plt.show()
+"""
