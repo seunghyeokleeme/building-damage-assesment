@@ -74,9 +74,6 @@ class UNet(nn.Module):
         self.unpool4 = nn.ConvTranspose2d(in_channels=512, out_channels=512,
                                           kernel_size=2, stride=2, padding=0, bias=True)
         
-        self.unpool4 = nn.ConvTranspose2d(in_channels=512, out_channels=512,
-                                          kernel_size=2, stride=2, padding=0, bias=True)
-        
         self.dec4_2 = CBR2d(in_channels=2 * 512, out_channels=512)
         
         self.dec4_1 = CBR2d(in_channels=512, out_channels=256)
@@ -259,10 +256,10 @@ transform = v2.Compose([
 ])
 
 dataset_train = xBD(data_dir=os.path.join(data_dir, 'train'), transform=transform)
-loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=0)
+loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=4)
 
 dataset_val = xBD(data_dir=os.path.join(data_dir, 'val'), transform=transform)
-loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=False, num_workers=0)
+loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=False, num_workers=4)
 
 num_data_train = len(dataset_train)
 num_data_val = len(dataset_val)
