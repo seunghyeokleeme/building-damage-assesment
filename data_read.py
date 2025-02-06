@@ -36,7 +36,8 @@ print(lst_train_targets[0])
 print(lst_test_images[0])
 print(lst_test_targets[0])
 
-dir_save_data = './datasets'
+# dir_save_data = './datasets'
+dir_save_data = './datasets_512'
 
 # lst_train_images: n_train + n_val
 n_train = 2239
@@ -73,8 +74,28 @@ for i in range(n_train):
     input_ = np.asarray(img_input)
     label_ = np.asarray(img_label)
 
-    np.save(os.path.join(dir_save_train, '%s_input.npy' %fname_image), input_)
-    np.save(os.path.join(dir_save_train, '%s_label.npy' %fname_label), label_)
+    x = label_.shape[0]
+    y = label_.shape[1]
+
+    input_512_1 = input_[:x//2, :y//2, :]
+    label_512_1 = label_[:x//2, :y//2]
+    input_512_2 = input_[:x//2, y//2:, :]
+    label_512_2 = label_[:x//2, y//2:]
+    input_512_3 = input_[x//2:, :y//2, :]
+    label_512_3 = label_[x//2:, :y//2]
+    input_512_4 = input_[x//2:, y//2:, :]
+    label_512_4 = label_[x//2:, y//2:]
+
+    # np.save(os.path.join(dir_save_train, '%s_input.npy' %fname_image), input_)
+    # np.save(os.path.join(dir_save_train, '%s_label.npy' %fname_label), label_)
+    np.save(os.path.join(dir_save_train, '%s_1_input.npy' %fname_image), input_512_1)
+    np.save(os.path.join(dir_save_train, '%s_1_label.npy' %fname_label), label_512_1)
+    np.save(os.path.join(dir_save_train, '%s_2_input.npy' %fname_image), input_512_2)
+    np.save(os.path.join(dir_save_train, '%s_2_label.npy' %fname_label), label_512_2)
+    np.save(os.path.join(dir_save_train, '%s_3_input.npy' %fname_image), input_512_3)
+    np.save(os.path.join(dir_save_train, '%s_3_label.npy' %fname_label), label_512_3)
+    np.save(os.path.join(dir_save_train, '%s_4_input.npy' %fname_image), input_512_4)
+    np.save(os.path.join(dir_save_train, '%s_4_label.npy' %fname_label), label_512_4)
 
 print("Data are ready to be used for training.")
 
@@ -93,8 +114,28 @@ for i in range(n_val):
     input_ = np.asarray(img_input)
     label_ = np.asarray(img_label)
 
-    np.save(os.path.join(dir_save_val, '%s_input.npy' %fname_image), input_)
-    np.save(os.path.join(dir_save_val, '%s_label.npy' %fname_label), label_)
+    x = label_.shape[0]
+    y = label_.shape[1]
+
+    input_512_1 = input_[:x//2, :y//2, :]
+    label_512_1 = label_[:x//2, :y//2]
+    input_512_2 = input_[:x//2, y//2:, :]
+    label_512_2 = label_[:x//2, y//2:]
+    input_512_3 = input_[x//2:, :y//2, :]
+    label_512_3 = label_[x//2:, :y//2]
+    input_512_4 = input_[x//2:, y//2:, :]
+    label_512_4 = label_[x//2:, y//2:]
+
+    # np.save(os.path.join(dir_save_val, '%s_input.npy' %fname_image), input_)
+    # np.save(os.path.join(dir_save_val, '%s_label.npy' %fname_label), label_)
+    np.save(os.path.join(dir_save_val, '%s_1_input.npy' %fname_image), input_512_1)
+    np.save(os.path.join(dir_save_val, '%s_1_label.npy' %fname_label), label_512_1)
+    np.save(os.path.join(dir_save_val, '%s_2_input.npy' %fname_image), input_512_2)
+    np.save(os.path.join(dir_save_val, '%s_2_label.npy' %fname_label), label_512_2)
+    np.save(os.path.join(dir_save_val, '%s_3_input.npy' %fname_image), input_512_3)
+    np.save(os.path.join(dir_save_val, '%s_3_label.npy' %fname_label), label_512_3)
+    np.save(os.path.join(dir_save_val, '%s_4_input.npy' %fname_image), input_512_4)
+    np.save(os.path.join(dir_save_val, '%s_4_label.npy' %fname_label), label_512_4)
 
 print("Data are ready to be used for validation.")
 
@@ -115,27 +156,34 @@ for i in range(n_test):
     input_ = np.asarray(img_input)
     label_ = np.asarray(img_label)
 
-    np.save(os.path.join(dir_save_test, '%s_input.npy' %fname_image), input_)
-    np.save(os.path.join(dir_save_test, '%s_label.npy' %fname_label), label_)
+    x = label_.shape[0]
+    y = label_.shape[1]
+
+    input_512_1 = input_[:x//2, :y//2, :]
+    label_512_1 = label_[:x//2, :y//2]
+    input_512_2 = input_[:x//2, y//2:, :]
+    label_512_2 = label_[:x//2, y//2:]
+    input_512_3 = input_[x//2:, :y//2, :]
+    label_512_3 = label_[x//2:, :y//2]
+    input_512_4 = input_[x//2:, y//2:, :]
+    label_512_4 = label_[x//2:, y//2:]
+
+    # np.save(os.path.join(dir_save_test, '%s_input.npy' %fname_image), input_)
+    # np.save(os.path.join(dir_save_test, '%s_label.npy' %fname_label), label_)
+    np.save(os.path.join(dir_save_test, '%s_1_input.npy' %fname_image), input_512_1)
+    np.save(os.path.join(dir_save_test, '%s_1_label.npy' %fname_label), label_512_1)
+    np.save(os.path.join(dir_save_test, '%s_2_input.npy' %fname_image), input_512_2)
+    np.save(os.path.join(dir_save_test, '%s_2_label.npy' %fname_label), label_512_2)
+    np.save(os.path.join(dir_save_test, '%s_3_input.npy' %fname_image), input_512_3)
+    np.save(os.path.join(dir_save_test, '%s_3_label.npy' %fname_label), label_512_3)
+    np.save(os.path.join(dir_save_test, '%s_4_input.npy' %fname_image), input_512_4)
+    np.save(os.path.join(dir_save_test, '%s_4_label.npy' %fname_label), label_512_4)
 
 print("Data are ready to be used for testing.")
 
-print(n_train *2 , len(os.listdir(dir_save_train)))
-print(n_val * 2, len(os.listdir(dir_save_val)))
-print(n_test * 2, len(os.listdir(dir_save_test)))
+print(n_train * 2 * 4, len(os.listdir(dir_save_train)))
+print(n_val * 2 * 4, len(os.listdir(dir_save_val)))
+print(n_test * 2 * 4, len(os.listdir(dir_save_test)))
 
 print("Data are successfully saved.")
 print("Data preprocessing is done.")
-"""
-print(input_.shape, label_.shape)
-
-plt.subplot(121)
-plt.imshow(input_)
-plt.title('Input Image')
-
-plt.subplot(122)
-plt.imshow(label_, cmap='gray')
-plt.title('Label Image')
-
-plt.show()
-"""
