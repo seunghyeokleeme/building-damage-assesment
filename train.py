@@ -250,22 +250,31 @@ class RandomHorizontalFlip(object):
 
 transform = v2.Compose([
     # Resize((512, 512)),
-    RandomHorizontalFlip(),
+    # RandomHorizontalFlip(),
     ToTensor(),
     Normalization(mean=0.5, std=0.5)
 ])
 
-dataset_train = xBD(data_dir=os.path.join(data_dir, 'train'), transform=transform)
-loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=4)
+mode = 'train'
 
-dataset_val = xBD(data_dir=os.path.join(data_dir, 'val'), transform=transform)
-loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=False, num_workers=4)
+if mode == 'train':
+    dataset_train = xBD(data_dir=os.path.join(data_dir, 'train'), transform=transform)
+    loader_train = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=4)
 
-num_data_train = len(dataset_train)
-num_data_val = len(dataset_val)
+    dataset_val = xBD(data_dir=os.path.join(data_dir, 'val'), transform=transform)
+    loader_val = DataLoader(dataset_val, batch_size=batch_size, shuffle=False, num_workers=4)
 
-num_batch_train = np.ceil(num_data_train / batch_size)
-num_batch_val = np.ceil(num_data_val / batch_size)
+    num_data_train = len(dataset_train)
+    num_data_val = len(dataset_val)
+
+    num_batch_train = np.ceil(num_data_train / batch_size)
+    num_batch_val = np.ceil(num_data_val / batch_size)
+else:
+    dataset_test = xBD(data_dir=os.path.join(data_dir, 'test'), transform=transform)
+    loader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False, num_workers=4)
+
+    num_data_test = len(dataset_test)
+    num_batch_test = np.ceil(num_data_test / batch_size)
 
 net = UNet().to(device)
 
@@ -312,57 +321,102 @@ def load(ckpt_dir, net, optim):
 ## 네트워크 학습
 st_epoch = 0
 
-net, optim, st_epoch = load(ckpt_dir=ckpt_dir, net=net, optim=optim)
+if mode == 'train':
+    net, optim, st_epoch = load(ckpt_dir=ckpt_dir, net=net, optim=optim)
 
-for epoch in range(st_epoch + 1, num_epoch + 1):
-    net.train()
-    loss_arr = []
-    acc_arr = []
+    for epoch in range(st_epoch + 1, num_epoch + 1):
+        net.train()
+        loss_arr = []
+        acc_arr = []
 
-    for batch, data in enumerate(loader_train, 1):
-        # fastward pass
-        label = data['label'].to(device)
-        input = data['input'].to(device)
+        for batch, data in enumerate(loader_train, 1):
+            # fastward pass
+            label = data['label'].to(device)
+            input = data['input'].to(device)
 
-        output = net(input)
+            output = net(input)
 
-        # backward pass
-        optim.zero_grad()
+            # backward pass
+            optim.zero_grad()
 
-        loss = fn_loss(output, label)
-        loss.backward()
+            loss = fn_loss(output, label)
+            loss.backward()
 
-        optim.step()
+            optim.step()
 
-        # loss function 계산
-        loss_arr.append(loss.item())
+            # loss function 계산
+            loss_arr.append(loss.item())
 
-        # 예측값 계산: sigmoid -> threshold 적용
-        pred = fn_pred(output)
-        acc = fn_acc(pred, label)
-        acc_arr.append(acc.item())
+            # 예측값 계산: sigmoid -> threshold 적용
+            pred = fn_pred(output)
+            acc = fn_acc(pred, label)
+            acc_arr.append(acc.item())
 
-        print("TRAIN: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f | ACC %.4f"%
-              (epoch, num_epoch, batch, num_batch_train, np.mean(loss_arr), np.mean(acc_arr)))
-            
-        # Tensorboard 저장하기
-        label_np = fn_tonumpy(label)
-        input_np = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
-        output_np = fn_tonumpy(pred)
+            print("TRAIN: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f | ACC %.4f"%
+                (epoch, num_epoch, batch, num_batch_train, np.mean(loss_arr), np.mean(acc_arr)))
+                
+            # Tensorboard 저장하기
+            label_np = fn_tonumpy(label)
+            input_np = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
+            output_np = fn_tonumpy(pred)
 
-        writer_train.add_image('label', label_np, num_batch_train * (epoch -1) + batch, dataformats='NHWC')
-        writer_train.add_image('input', input_np, num_batch_train * (epoch -1) + batch, dataformats='NHWC')
-        writer_train.add_image('output', output_np, num_batch_train * (epoch -1) + batch, dataformats='NHWC')
+            writer_train.add_image('label', label_np, num_batch_train * (epoch -1) + batch, dataformats='NHWC')
+            writer_train.add_image('input', input_np, num_batch_train * (epoch -1) + batch, dataformats='NHWC')
+            writer_train.add_image('output', output_np, num_batch_train * (epoch -1) + batch, dataformats='NHWC')
 
-    writer_train.add_scalar('loss', np.mean(loss_arr), epoch)
-    writer_train.add_scalar('accuracy', np.mean(acc_arr), epoch)
+        writer_train.add_scalar('loss', np.mean(loss_arr), epoch)
+        writer_train.add_scalar('accuracy', np.mean(acc_arr), epoch)
+
+        with torch.no_grad():
+            net.eval()
+            loss_arr = []
+            acc_arr = []
+
+            for batch, data in enumerate(loader_val, 1):
+                # forward pass
+                label = data['label'].to(device)
+                input = data['input'].to(device)
+
+                output = net(input)
+
+                # loss function 계산
+                loss = fn_loss(output, label)
+                loss_arr.append(loss.item())
+
+                # 예측값 계산: sigmoid -> threshold 적용
+                pred = fn_pred(output)
+                acc = fn_acc(pred, label)
+                acc_arr.append(acc.item())
+
+                print("VALID: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f | ACC %.4f"%
+                    (epoch, num_epoch, batch, num_batch_val, np.mean(loss_arr), np.mean(acc_arr)))
+                
+                # Tensorboard 저장하기
+                label_np = fn_tonumpy(label)
+                input_np = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
+                output_np = fn_tonumpy(pred)
+
+                writer_val.add_image('label', label_np, num_batch_val * (epoch -1) + batch, dataformats='NHWC')
+                writer_val.add_image('input', input_np, num_batch_val * (epoch -1) + batch, dataformats='NHWC')
+                writer_val.add_image('output', output_np, num_batch_val * (epoch -1) + batch, dataformats='NHWC')
+
+        writer_val.add_scalar('loss', np.mean(loss_arr), epoch)
+        writer_val.add_scalar('accuracy', np.mean(acc_arr), epoch)
+
+        if epoch % 5 == 0:
+            save(ckpt_dir=ckpt_dir, net=net, optim=optim, epoch=epoch)
+
+    writer_train.close()
+    writer_val.close()
+else:
+    net, optim, st_epoch = load(ckpt_dir=ckpt_dir, net=net, optim=optim)
 
     with torch.no_grad():
         net.eval()
         loss_arr = []
         acc_arr = []
 
-        for batch, data in enumerate(loader_val, 1):
+        for batch, data in enumerate(loader_test, 1):
             # forward pass
             label = data['label'].to(device)
             input = data['input'].to(device)
@@ -378,23 +432,7 @@ for epoch in range(st_epoch + 1, num_epoch + 1):
             acc = fn_acc(pred, label)
             acc_arr.append(acc.item())
 
-            print("VALID: EPOCH %04d / %04d | BATCH %04d / %04d | LOSS %.4f | ACC %.4f"%
-                  (epoch, num_epoch, batch, num_batch_val, np.mean(loss_arr), np.mean(acc_arr)))
+            print("TEST: BATCH %04d / %04d | LOSS %.4f | ACC %.4f"%
+                (batch, num_batch_val, np.mean(loss_arr), np.mean(acc_arr)))
             
-            # Tensorboard 저장하기
-            label_np = fn_tonumpy(label)
-            input_np = fn_tonumpy(fn_denorm(input, mean=0.5, std=0.5))
-            output_np = fn_tonumpy(pred)
-
-            writer_val.add_image('label', label_np, num_batch_val * (epoch -1) + batch, dataformats='NHWC')
-            writer_val.add_image('input', input_np, num_batch_val * (epoch -1) + batch, dataformats='NHWC')
-            writer_val.add_image('output', output_np, num_batch_val * (epoch -1) + batch, dataformats='NHWC')
-
-    writer_val.add_scalar('loss', np.mean(loss_arr), epoch)
-    writer_val.add_scalar('accuracy', np.mean(acc_arr), epoch)
-
-    if epoch % 5 == 0:
-        save(ckpt_dir=ckpt_dir, net=net, optim=optim, epoch=epoch)
-
-writer_train.close()
-writer_val.close()
+    print("AVERGE TEST: LOSS %.4f | ACC %.4f"%(np.mean(loss_arr), np.mean(acc_arr)))

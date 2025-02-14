@@ -14,34 +14,44 @@ def extract_tar(tar_path, extract_to_path):
 dir_data = './xbd'
 
 # extract_tar(os.path.join(dir_data, 'train_images_labels_targets.tar'), dir_data)
+# extract_tar(os.path.join(dir_data, 'hold_images_labels_targets.tar'), dir_data)
 # extract_tar(os.path.join(dir_data, 'test_images_labels_targets.tar'), dir_data)
 
 lst_train_images = [f for f in os.listdir(os.path.join(dir_data, 'train', 'images')) if f.endswith('pre_disaster.png')]
 lst_train_targets = [f for f in os.listdir(os.path.join(dir_data, 'train', 'targets')) if f.endswith('pre_disaster_target.png')]
+
+lst_hold_images = [f for f in os.listdir(os.path.join(dir_data, 'hold', 'images')) if f.endswith('pre_disaster.png')]
+lst_hold_targets = [f for f in os.listdir(os.path.join(dir_data, 'hold', 'targets')) if f.endswith('pre_disaster_target.png')]
+
 lst_test_images = [f for f in os.listdir(os.path.join(dir_data, 'test', 'images')) if f.endswith('pre_disaster.png')]
 lst_test_targets = [f for f in os.listdir(os.path.join(dir_data, 'test', 'targets')) if f.endswith('pre_disaster_target.png')]
 
 lst_train_images.sort()
 lst_train_targets.sort()
+lst_hold_images.sort()
+lst_hold_targets.sort()
 lst_test_images.sort()
 lst_test_targets.sort()
 
 print(f"Number of training images: {len(lst_train_images)}")
 print(f"Number of training targets: {len(lst_train_targets)}")
+print(f"Number of hold images: {len(lst_hold_images)}")
+print(f"Number of hold targets: {len(lst_hold_targets)}")
 print(f"Number of test images: {len(lst_test_images)}")
 print(f"Number of test targets: {len(lst_test_targets)}")
 
 print(lst_train_images[0])
 print(lst_train_targets[0])
+print(lst_hold_images[0])
+print(lst_hold_targets[0])
 print(lst_test_images[0])
 print(lst_test_targets[0])
 
-# dir_save_data = './datasets'
-dir_save_data = './datasets_512'
+dir_save_data = './datasets'
 
 # lst_train_images: n_train + n_val
-n_train = 2239
-n_val = 560
+n_train = 2799
+n_val = 933
 n_test = 933
 
 dir_save_train = os.path.join(dir_save_data, 'train')
@@ -57,8 +67,7 @@ if not os.path.exists(dir_save_val):
 if not os.path.exists(dir_save_test):
     os.makedirs(dir_save_test)
 
-id_frame = np.arange(n_train+n_val)
-np.random.shuffle(id_frame)
+id_frame = np.arange(n_train)
 offset = 0
 
 for i in range(n_train):
@@ -86,8 +95,6 @@ for i in range(n_train):
     input_512_4 = input_[x//2:, y//2:, :]
     label_512_4 = label_[x//2:, y//2:]
 
-    # np.save(os.path.join(dir_save_train, '%s_input.npy' %fname_image), input_)
-    # np.save(os.path.join(dir_save_train, '%s_label.npy' %fname_label), label_)
     np.save(os.path.join(dir_save_train, '%s_1_input.npy' %fname_image), input_512_1)
     np.save(os.path.join(dir_save_train, '%s_1_label.npy' %fname_label), label_512_1)
     np.save(os.path.join(dir_save_train, '%s_2_input.npy' %fname_image), input_512_2)
@@ -99,14 +106,15 @@ for i in range(n_train):
 
 print("Data are ready to be used for training.")
 
-offset += n_train
+id_frame = np.arange(n_val)
+offset = 0
 
 for i in range(n_val):
     idx = id_frame[i+offset]
-    fname_image = lst_train_images[idx].split('.png')[0]
-    fname_label = lst_train_targets[idx].split('_target.png')[0]
-    path_image = os.path.join(dir_data, 'train', 'images', lst_train_images[idx])
-    path_label = os.path.join(dir_data, 'train', 'targets', lst_train_targets[idx])    
+    fname_image = lst_hold_images[idx].split('.png')[0]
+    fname_label = lst_hold_targets[idx].split('_target.png')[0]
+    path_image = os.path.join(dir_data, 'hold', 'images', lst_hold_images[idx])
+    path_label = os.path.join(dir_data, 'hold', 'targets', lst_hold_targets[idx])
     
     img_input = Image.open(path_image)
     img_label = Image.open(path_label)
@@ -126,8 +134,6 @@ for i in range(n_val):
     input_512_4 = input_[x//2:, y//2:, :]
     label_512_4 = label_[x//2:, y//2:]
 
-    # np.save(os.path.join(dir_save_val, '%s_input.npy' %fname_image), input_)
-    # np.save(os.path.join(dir_save_val, '%s_label.npy' %fname_label), label_)
     np.save(os.path.join(dir_save_val, '%s_1_input.npy' %fname_image), input_512_1)
     np.save(os.path.join(dir_save_val, '%s_1_label.npy' %fname_label), label_512_1)
     np.save(os.path.join(dir_save_val, '%s_2_input.npy' %fname_image), input_512_2)
@@ -140,7 +146,6 @@ for i in range(n_val):
 print("Data are ready to be used for validation.")
 
 id_frame = np.arange(n_test)
-np.random.shuffle(id_frame)
 offset = 0
 
 for i in range(n_test):
